@@ -14,12 +14,9 @@ odos_router_address = '0x4bBa932E9792A2b917D47830C93a9BC79320E4f7'
 
 
 
-
-
 def odos_transaction(token_in_address, token_out_address, token_in_amount, user, simulate=True):
 
     decimals_in = get_token_decimals(token_in_address)
-    decimals_out = get_token_decimals(token_out_address)
 
     allowance = get_allowance(token_in_address, user, odos_router_address)
     if allowance < token_in_amount*10**decimals_in:
@@ -87,7 +84,7 @@ def odos_transaction(token_in_address, token_out_address, token_in_amount, user,
             # handle transaction assembly failure cases
             return None
 
-        return quote, transaction
+        return transaction, quote
 
 
 
@@ -103,14 +100,21 @@ def execute_tx(transaction, user):
     signed_tx = w3.eth.account.signTransaction(transaction, user['private_key'])
     tx_hash = w3.eth.sendRawTransaction(signed_tx.rawTransaction)
 
-
-    return tx_hash
-
+    initial_gas_used = transaction['gas']*transaction['gasPrice']/1e18
 
 
+    return tx_hash, initial_gas_used
 
 
-# print(json.dumps(transaction, indent=2))
+
+
+# token_in_address = WETH_ADDRESS
+# token_out_address = USDC_ADDRESS
+# token_in_amount = 0.02
+# user = users['rabby8']
+# transaction, _ = odos_transaction(token_in_address, token_out_address, token_in_amount, user, simulate=True)
+# execute_tx(transaction, user)
+# # print(json.dumps(transaction, indent=2))
 
 
 

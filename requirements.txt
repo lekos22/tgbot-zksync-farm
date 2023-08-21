@@ -1,3 +1,4 @@
 python-dotenv
 eth-brownie
 web3 = 5.31.3
+pyTelegramBotAPI

@@ -30,12 +30,11 @@ def generate_farm_paths(message):
     full_message = ""
     txs = {}
     total_time = 30 * 60
-    sleep_times = divide_length(1800, len(users))
+    sleep_times = divide_length(total_time, len(users))
     n=0
-
+    total_volume = 0
 
     for i in users:
-
 
 
         suggested_tx = suggest_tx(users[i]['eth_balance'], users[i]['weth_balance'], users[i]['usdc_balance'])
@@ -63,6 +62,14 @@ def generate_farm_paths(message):
         txs[i] = suggested_tx
         txs[i]['sleep_time'] = sleep_times[n]
         n+=1
+        total_volume += suggested_tx['tx_value']
+
+    gas_estimate = round(( w3.eth.gas_price * 2_000_000 / 1e18 ) * 0.7 * get_eth_price(), 3)
+
+    full_message += f'*Summary* \n' \
+                    f'Total Volume: *${round(total_volume, 2)}* \n' \
+                    f'LP fees: *${round(total_volume*0.03, 2)}* \n' \
+                    f'Gas fees: *${round(gas_estimate * len(users), 2)}*'
 
     with open('current_txs_prepared.json', 'w') as file:
         json.dump(txs, file, indent=2)
@@ -80,6 +87,7 @@ def generate_farm_paths(message):
 
 
 
+
 @bot.callback_query_handler(func=lambda call: call.data.startswith('Execute'))
 def Execute_prepared_txs(call):
 
@@ -92,13 +100,25 @@ def Execute_prepared_txs(call):
         token_in_address = txs[i]['token_in']
         token_out_address = txs[i]['token_out']
         token_in_amount = txs[i]['amount_in']
-        odos_transaction(token_in_address, token_out_address, token_in_amount, users[i], simulate=True)
-        execute_tx(odos_transaction, users[i])
+        transaction = odos_transaction(token_in_address, token_out_address, token_in_amount, users[i], simulate=True)
+        if transaction['gas'] > 0 and transaction['gas'] < 7_000_000:
+            tx_hash, initial_gas_spent = execute_tx(transaction, users[i])
 
-        time.sleep()
+            bot.send_message(call.message.chat.id,
+                             f"🟢 *{i}*:  TX executed @ [{tx_hash}](https://etherscan.io/tx/{tx_hash})",
+                             parse_mode='Markdown')
+            time.sleep(txs['sleep_time'])
+        elif transaction['gas'] < 0:
+            bot.send_message(call.message.chat.id,
+                             f"🔴 *{i}*:  ODOS failed to create the transaction",
+                             parse_mode='Markdown')
+        elif transaction['gas'] > 7_000_000:
+            bot.send_message(call.message.chat.id,
+                             f"🟠 *{i}*:  Gas Limit too high, be careful!",
+                             parse_mode='Markdown')
 
 
-    bot.send_message(call.message.chat.id, "Transactions Executed", parse_mode='Markdown')
+    bot.send_message(call.message.chat.id, "✅ All Transactions Executed", parse_mode='Markdown')
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('Cancel'))
