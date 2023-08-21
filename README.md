@@ -6,7 +6,7 @@ To use this tool, you have to follow these steps
 ## Prerequisites
 
 In this first alpha stage, this application is still not able to swap ETH but just WETH <-> USDC, so be sure to
-1. Fund a wallet from a CEX to Ethereum mainnet
+1. Fund one or more wallets from a CEX to Ethereum mainnet
 2. Do at least 1 tx on Ethereum
 3. Bridge the funds to ZKSync (I suggest Orbiter Bridge)
 4. Swap all the ETH to WETH or USDC, except for like $25 for gas fees
