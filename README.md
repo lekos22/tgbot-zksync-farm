@@ -3,6 +3,16 @@ Welcome my dear shareholders to my guide on how to build a telegram bot to autom
 
 To use this tool, you have to follow these steps
 
+## Prerequisites
+
+In this first alpha stage, this application is still not able to swap ETH but just WETH <-> USDC, so be sure to
+1. Fund a wallet from a CEX to Ethereum mainnet
+2. Do at least 1 tx on Ethereum
+3. Bridge the funds to ZKSync (I suggest Orbiter Bridge)
+4. Swap all the ETH to WETH or USDC, except for like $25 for gas fees
+
+Now let's move to Telegram Bot setup
+
 ## Telegram Instructions
 1. Search for @BotFather on Telegram
 2. /newbot -> give it a name and a handle
@@ -13,7 +23,6 @@ You will get a token like this, save it
 
 3. /mybots -> select your bot -> edit bot -> edit commands
 4. digit this `generate_farm_paths - Generate swap paths for all wallets`
-
 
 You're done with telegram, let's move to Python
 
@@ -44,16 +53,17 @@ This file basically just run the bot in 'polling' mode (waiting for commands)
 Load the bot info from .env
 
 ## accounts_info.py
-Load accounts info from the private keys (address, balances of eth/weth/usdc)
+Load accounts info starting from the private keys (address, current balances of eth/weth/usdc)
 
 ## web3_functions.py
-Defines functions to get_allowance, set approvals and get balances
+Defines the functions to get the allowance of a token, set approval and get balances (allowance/approval will help with future updates)
 
 ## odos_router.py
-Setup and execute a swap function on Odos (using their official API)
+Defines the functions to setup and execute a swap function on Odos (using their official API)
 
 ## random_farm_generator.py
-Contains a function called suggest_tx(). Starting from WETH and USDC, takes the one with higher balance and generates a random transaction with volume > 75% of the balance (to maximize volume)
+Contains a function called suggest_tx(). Starting from WETH and USDC, takes the one with higher balance and generates a random transaction with volume > 75% of the balance (to maximize volume). 
+With future updates you will have more granularity on this.
 
 ## generate_paths.py
 Define the `generate_farm_paths` telegram command, invoke the suggest_tx() to generate transactions for every user, divided randomly in a 30 minutes window (you can edit time editind the variable `sleep_times`)
