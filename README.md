@@ -1,7 +1,20 @@
 # tgbot-zksync-farm
 Welcome my dear shareholders to my guide on how to build a telegram bot to automate the boring process of airdrop farming.
 
-To use this tool, you have to follow these steps
+To build this tool, you have to follow these steps, it would be preferrable if you had a bit of experience with python and development environment.
+
+With the next updates, I will start to make it more and more user friendly.
+
+For the moment, the basic workflow is this
+1. You fund some wallets with ETH
+2. You bridge to ZKSync
+3. You swap ETH to WETH or USDC
+4. Every couple days, you run the bot in python, go to the bot with telegram, generate a list of tx for every wallet, and run the program.
+
+I know I know, running with python (from PC) and then going to telegram looks redundant, but it's ok for the moment, and we don't want to upload the private keys to a server for the moment!
+
+You can leave python running as long as you want, even days, and the bot will continue to wait for commands.
+
 
 ## Prerequisites
 
