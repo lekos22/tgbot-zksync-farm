@@ -42,6 +42,7 @@ def suggest_tx(eth_balance, weth_balance, usdc_balance):
     WETH_ADDRESS = '0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91'
     USDC_ADDRESS = '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4'
 
+
     # Get WETH price
 
     weth_price = get_eth_price()
@@ -76,6 +77,15 @@ def suggest_tx(eth_balance, weth_balance, usdc_balance):
         # Check if amount_in_usd_value is greater than $10
         if amount_in_usd_value > 10:
             break
+
+    if weth_balance < 0.005*1e18 and usdc_balance < 5*1e6:
+        gas_left = (random.uniform(0, 5)*(0.001) + 0.018 ) * 1e18
+        return {
+            'token_in': '0x0000000000000000000000000000000000000000',
+            'token_out': WETH_ADDRESS,
+            'amount_in': eth_balance - gas_left,
+            'tx_value': (eth_balance - gas_left)/1e18*weth_price
+        }
 
     return {
         'token_in': token_in,
