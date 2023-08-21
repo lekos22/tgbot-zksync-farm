@@ -38,51 +38,55 @@ def generate_farm_paths(message):
 
 
         suggested_tx = suggest_tx(users[i]['eth_balance'], users[i]['weth_balance'], users[i]['usdc_balance'])
-
-        if suggested_tx['token_in'] == '0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91':
-            suggested_tx_readable = f"{round(suggested_tx['amount_in'], 3)} WETH -> USDC " \
-                                    f"(*${round(suggested_tx['tx_value'], 2)}*)"
-            decimals_in = 1e18
-            decimals_out = 1e6
+        if suggested_tx == 'insufficient ETH balance':
+            bot.send_message(message.chat.id, "🔴 Not enough ETH to send transactions!", parse_mode='Markdown')
 
         else:
-            suggested_tx_readable = f"{round(suggested_tx['amount_in'], 2)} USDC -> WETH " \
-                                    f"(*${round(suggested_tx['tx_value'], 2)}*)"
-            decimals_in = 1e6
-            decimals_out = 1e18
 
-        full_message += f"Account: *{i}*\n"
-        full_message += f"ETH balance: {round(users[i]['eth_balance']/1e18,4)}\n"
-        full_message += f"WETH balance: {round(users[i]['weth_balance']/1e18,4)}\n"
-        full_message += f"USDC balance: {round(users[i]['usdc_balance']/1e6,2)}\n"
+            if suggested_tx['token_in'] == '0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91':
+                suggested_tx_readable = f"{round(suggested_tx['amount_in'], 3)} WETH -> USDC " \
+                                        f"(*${round(suggested_tx['tx_value'], 2)}*)"
+                decimals_in = 1e18
+                decimals_out = 1e6
 
-        full_message += f"{suggested_tx_readable}\n\n"
+            else:
+                suggested_tx_readable = f"{round(suggested_tx['amount_in'], 2)} USDC -> WETH " \
+                                        f"(*${round(suggested_tx['tx_value'], 2)}*)"
+                decimals_in = 1e6
+                decimals_out = 1e18
 
+            full_message += f"🟢 Account: *{i}*\n"
+            full_message += f"ETH balance: {round(users[i]['eth_balance']/1e18,4)}\n"
+            full_message += f"WETH balance: {round(users[i]['weth_balance']/1e18,4)}\n"
+            full_message += f"USDC balance: {round(users[i]['usdc_balance']/1e6,2)}\n"
 
-        txs[i] = suggested_tx
-        txs[i]['sleep_time'] = sleep_times[n]
-        n+=1
-        total_volume += suggested_tx['tx_value']
-
-    gas_estimate = round(( w3.eth.gas_price * 2_000_000 / 1e18 ) * 0.7 * get_eth_price(), 3)
-
-    full_message += f'*Summary* \n' \
-                    f'Total Volume: *${round(total_volume, 2)}* \n' \
-                    f'LP fees: *${round(total_volume*0.03, 2)}* \n' \
-                    f'Gas fees: *${round(gas_estimate * len(users), 2)}*'
-
-    with open('current_txs_prepared.json', 'w') as file:
-        json.dump(txs, file, indent=2)
+            full_message += f"{suggested_tx_readable}\n\n"
 
 
-        # buttons
-    send_or_cancel_tx = types.InlineKeyboardMarkup(row_width=2)
-    send_tx = types.InlineKeyboardButton("✅Execute TXs", callback_data=f"Execute")
-    cancel_tx = types.InlineKeyboardButton("❌Cancel TXs", callback_data=f"Cancel")
-    send_or_cancel_tx.add(send_tx, cancel_tx)
+            txs[i] = suggested_tx
+            txs[i]['sleep_time'] = sleep_times[n]
+            n+=1
+            total_volume += suggested_tx['tx_value']
+
+        gas_estimate = round(( w3.eth.gas_price * 2_000_000 / 1e18 ) * 0.7 * get_eth_price(), 3)
+
+        full_message += f'*Summary* \n' \
+                        f'Total Volume: *${round(total_volume, 2)}* \n' \
+                        f'LP fees: *${round(total_volume*0.03, 2)}* \n' \
+                        f'Gas fees: *${round(gas_estimate * len(users), 2)}*'
+
+        with open('current_txs_prepared.json', 'w') as file:
+            json.dump(txs, file, indent=2)
 
 
-    bot.send_message(message.chat.id, full_message, reply_markup=send_or_cancel_tx, parse_mode='Markdown')
+            # buttons
+        send_or_cancel_tx = types.InlineKeyboardMarkup(row_width=2)
+        send_tx = types.InlineKeyboardButton("✅Execute TXs", callback_data=f"Execute")
+        cancel_tx = types.InlineKeyboardButton("❌Cancel TXs", callback_data=f"Cancel")
+        send_or_cancel_tx.add(send_tx, cancel_tx)
+
+
+        bot.send_message(message.chat.id, full_message, reply_markup=send_or_cancel_tx, parse_mode='Markdown')
 
 
 
@@ -105,16 +109,16 @@ def Execute_prepared_txs(call):
             tx_hash, initial_gas_spent = execute_tx(transaction, users[i])
 
             bot.send_message(call.message.chat.id,
-                             f"🟢 *{i}*:  TX executed @ [{tx_hash}](https://etherscan.io/tx/{tx_hash})",
+                             f"✅ *{i}*:  TX executed @ [{tx_hash}](https://etherscan.io/tx/{tx_hash})",
                              parse_mode='Markdown')
             time.sleep(txs['sleep_time'])
         elif transaction['gas'] < 0:
             bot.send_message(call.message.chat.id,
-                             f"🔴 *{i}*:  ODOS failed to create the transaction",
+                             f"❌ *{i}*:  ODOS failed to create the transaction",
                              parse_mode='Markdown')
         elif transaction['gas'] > 7_000_000:
             bot.send_message(call.message.chat.id,
-                             f"🟠 *{i}*:  Gas Limit too high, be careful!",
+                             f"⛽️💰 *{i}*:  Gas too high, tx interrupted!",
                              parse_mode='Markdown')
 
 
