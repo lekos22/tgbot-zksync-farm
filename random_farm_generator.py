@@ -78,14 +78,6 @@ def suggest_tx(eth_balance, weth_balance, usdc_balance):
         if amount_in_usd_value > 10:
             break
 
-    if weth_balance < 0.005*1e18 and usdc_balance < 5*1e6:
-        gas_left = (random.uniform(0, 5)*(0.001) + 0.018 ) * 1e18
-        return {
-            'token_in': '0x0000000000000000000000000000000000000000',
-            'token_out': WETH_ADDRESS,
-            'amount_in': eth_balance - gas_left,
-            'tx_value': (eth_balance - gas_left)/1e18*weth_price
-        }
 
     return {
         'token_in': token_in,
