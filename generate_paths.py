@@ -40,8 +40,10 @@ def generate_farm_paths(message):
         suggested_tx = suggest_tx(users[i]['eth_balance'], users[i]['weth_balance'], users[i]['usdc_balance'])
         if suggested_tx == 'insufficient ETH balance':
             bot.send_message(message.chat.id, "🔴 Not enough ETH to send transactions!", parse_mode='Markdown')
+            return
         elif suggested_tx == 'insufficient WETH and USDC balance':
             bot.send_message(message.chat.id, "🔴 Not enough WETH or USDC to send transactions!", parse_mode='Markdown')
+            return
 
         else:
 
