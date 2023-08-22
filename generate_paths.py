@@ -76,7 +76,7 @@ def generate_farm_paths(message):
 
         full_message += f'*Summary* \n' \
                         f'Total Volume: *${round(total_volume, 2)}* \n' \
-                        f'LP fees: *${round(total_volume*0.003, 2)}* \n' \
+                        f'LP fees: *${round(total_volume*0.0007, 2)}* \n' \
                         f'Gas fees: *${round(gas_estimate * len(users), 2)}*'
 
         with open('current_txs_prepared.json', 'w') as file:
