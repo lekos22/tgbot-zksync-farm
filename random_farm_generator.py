@@ -36,9 +36,9 @@ def get_eth_price():
 
 def suggest_tx(eth_balance, weth_balance, usdc_balance):
     # Check eth_balance
-    if eth_balance <= 0.005*1e18:
+    if eth_balance <= 0.002*1e18:
         return {'insufficient ETH balance'}
-    elif weth_balance < 0.005*1e18 and usdc_balance < 5*1e6:
+    elif weth_balance < 0.005 * 1e18 and usdc_balance < 5 * 1e6:
         return {'insufficient WETH and USDC balance'}
 
     WETH_ADDRESS = '0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91'
@@ -70,7 +70,7 @@ def suggest_tx(eth_balance, weth_balance, usdc_balance):
 
         # Randomly select an amount_in
     while True:
-        random_percentage = random.uniform(0.75, 1)  # Assuming you want to choose between 10% and 100%
+        random_percentage = random.uniform(0.75, 1)  # Assuming you want to choose between 75% and 100%
         amount_in = random_percentage * max_amount
 
         # Convert amount_in to USD value

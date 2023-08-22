@@ -7,37 +7,43 @@ from random_farm_generator import *
 from telebot import types
 import random
 
-
+WETH_ADDRESS = '0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91'
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "Welcome to Plow, the farming bot.")
 
 
-
-
 @bot.message_handler(commands=['generate_farm_paths'])
 def generate_farm_paths(message):
+
+    # send the message
     bot.send_message(message.chat.id, f"Loading wallets...🕐\n"
                                       f"ETA: 3s per wallet", parse_mode='Markdown')
 
+    # load the users keys and balances
     users = load_accounts()
 
+    # send the message to inform the user
     bot.send_message(message.chat.id, f"Wallets loaded ✅", parse_mode='Markdown')
     bot.send_message(message.chat.id, f"Calculating paths...🕐", parse_mode='Markdown')
     print(json.dumps(users, indent=2))
 
-    full_message = ""
-    txs = {}
+    # set sleep times
     total_time = 45 * 60
     sleep_times = divide_length(total_time, len(users))
-    n=0
+
+    n = 0
     total_volume = 0
+    full_message = ""
+    txs = {}
 
-    for i in users:
+    for n, i in enumerate(users):
 
-
+        # generate a suggested tx
         suggested_tx = suggest_tx(users[i]['eth_balance'], users[i]['weth_balance'], users[i]['usdc_balance'])
+
+        # check if possible to proceed
         if suggested_tx == 'insufficient ETH balance':
             bot.send_message(message.chat.id, "🔴 Not enough ETH to send transactions!", parse_mode='Markdown')
             return
@@ -45,36 +51,25 @@ def generate_farm_paths(message):
             bot.send_message(message.chat.id, "🔴 Not enough WETH or USDC to send transactions!", parse_mode='Markdown')
             return
         else:
-
-            if suggested_tx['token_in'] == '0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91':
-                suggested_tx_readable = f"{round(suggested_tx['amount_in'], 3)} WETH -> USDC " \
-                                        f"(*${round(suggested_tx['tx_value'], 2)}*)"
-                decimals_in = 1e18
-                decimals_out = 1e6
-
-            else:
-                suggested_tx_readable = f"{round(suggested_tx['amount_in'], 2)} USDC -> WETH " \
-                                        f"(*${round(suggested_tx['tx_value'], 2)}*)"
-                decimals_in = 1e6
-                decimals_out = 1e18
-
-            full_message += f"🟢 Account: *{i}*\n"
-            full_message += f"ETH balance: {round(users[i]['eth_balance']/1e18,4)}\n"
-            full_message += f"WETH balance: {round(users[i]['weth_balance']/1e18,4)}\n"
-            full_message += f"USDC balance: {round(users[i]['usdc_balance']/1e6,2)}\n"
-
-            full_message += f"{suggested_tx_readable}\n"
-
-
+            # txs details will be written into a json
             txs[i] = suggested_tx
             txs[i]['sleep_time'] = sleep_times[n]
 
-            full_message += f"Sleep time: {sleep_times[n]//60}m\n\n"
-            n+=1
+            if users[i]['eth_balance'] < 0.01:
+                full_message += generate_message_for_user(i, users[i], suggested_tx, sleep_times[n], low_eth = True)
+            else:
+                full_message += generate_message_for_user(i, users[i], suggested_tx, sleep_times[n])
+
+            # build the message to send
+
+
             total_volume += suggested_tx['tx_value']
+            n+=1
 
-    gas_estimate = round(( w3.eth.gas_price * 2_000_000 / 1e18 ) * 0.7 * get_eth_price(), 3)
+    # gas estimation is a bit simplified, but gas fees are incredibly low on zksync so it's ok
+    gas_estimate = round((w3.eth.gas_price * 2_000_000 / 1e18 ) * 0.7 * get_eth_price(), 3)
 
+    # add the summary to the message
     full_message += f'\n*Summary* \n' \
                     f'Total Volume: *${round(total_volume, 2)}* \n' \
                     f'LP fees ~ *${round(total_volume*0.0007, 2)}* \n' \
@@ -85,13 +80,13 @@ def generate_farm_paths(message):
         json.dump(txs, file, indent=2)
 
 
-        # buttons
+    # insert execute/cancel buttons
     send_or_cancel_tx = types.InlineKeyboardMarkup(row_width=2)
     send_tx = types.InlineKeyboardButton("✅Execute TXs", callback_data=f"Execute")
     cancel_tx = types.InlineKeyboardButton("❌Cancel TXs", callback_data=f"Cancel")
     send_or_cancel_tx.add(send_tx, cancel_tx)
 
-
+    # send the message
     bot.send_message(message.chat.id, full_message, reply_markup=send_or_cancel_tx, parse_mode='Markdown')
 
 
@@ -151,3 +146,28 @@ def Cancel_prepared_txs(call):
     else:
         print(f"'{file_name}' does not exist.")
 
+
+
+
+def tx_total_expenses():
+    weth_price = get_eth_price()
+
+    balance_before = 0
+
+    for i in users:
+        balance_before += (users[i]['eth_balance'] + users[i]['weth_balance']) /1e18 * weth_price \
+                         + users[i]['usdc_balance'] /1e6
+
+
+
+def generate_message_for_user(account_name, user, suggested_tx, sleep_time, low_eth = False):
+    token_in = 'WETH' if suggested_tx['token_in'] == WETH_ADDRESS else 'USDC'
+    token_out = 'USDC' if token_in == 'WETH' else 'WETH'
+
+    low_eth_warning = "" if low_eth == False else "(⚠️ Low ETH)"
+
+    return (f"🟢 Account: *{account_name}*\n"
+            f"ETH balance: {round(user['eth_balance']/1e18, 4)} {low_eth_warning}\n"
+            f"{token_in} balance: {round(user[f'{token_in.lower()}_balance']/1e18, 4)}\n"
+            f"Suggested TX: {round(suggested_tx['amount_in'], 3)} {token_in} -> {token_out} (*${round(suggested_tx['tx_value'], 2)}*)\n"
+            f"Sleep time: {sleep_time//60}m\n\n")
