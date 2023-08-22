@@ -9,7 +9,8 @@ For the moment, the basic workflow is this
 1. You fund some wallets with ETH
 2. You bridge to ZKSync
 3. You swap ETH to WETH or USDC
-4. Every couple days, you run the bot in python (from PC), go to the bot on telegram, the bot generate a list of tx for every wallet, and you send the ok to execute the transactions.
+4. Every couple days, you run the bot in python (from PC), go to the bot on telegram, the bot generate a list of tx for every wallet and stores them in a json file.
+5. If you like the transactions, you click the "Execute" button, or generate new paths.
 
 I know I know, running with python from PC and then going to telegram looks redundant, but it's ok for the moment, and we don't want to upload the private keys to a server for the moment!
 
