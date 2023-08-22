@@ -29,6 +29,8 @@ def generate_farm_paths(message):
 
     full_message = ""
     txs = {}
+
+    # Edit this field to distribute your trades within a time window of your choice (sugested > 5 min per wallet). total_time is in seconds
     total_time = 30 * 60
     sleep_times = divide_length(total_time, len(users))
     n=0
