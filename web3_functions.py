@@ -1,8 +1,11 @@
-
+import os
 from web3 import Web3
 from dotenv import load_dotenv
+import requests
 load_dotenv()
-import web3
+
+
+
 
 
 
@@ -27,6 +30,9 @@ def get_allowance(token_address, user, spender_address):
     contract = function_signature(Web3.toChecksumAddress(token_address))
     return contract.functions.allowance(Web3.toChecksumAddress(user['address']),
                                         Web3.toChecksumAddress(spender_address)).call()
+
+
+
 
 
 
@@ -105,3 +111,28 @@ def get_token_decimals(token_address):
     contract = w3.eth.contract(address=Web3.toChecksumAddress(token_address), abi=[decimals_abi])
     decimals = contract.functions.decimals().call()
     return decimals
+
+
+
+def get_eth_price():
+    # Define the base URL and parameters
+    url = "https://api.etherscan.io/api"
+    parameters = {
+        'module': 'stats',
+        'action': 'ethprice',
+        'apikey': os.getenv('ETHERSCAN_API')
+    }
+    # Make the GET request
+    response = requests.get(url, params=parameters)
+
+    # Ensure the response is successful
+    response.raise_for_status()
+
+    # Parse the JSON response
+    data = response.json()
+
+    # Check if the result is successful
+    if data['status'] == '1':
+        return float(data['result']['ethusd'])
+    else:
+        raise ValueError(f"API Error: {data['message']}")
