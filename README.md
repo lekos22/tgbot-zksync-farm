@@ -40,8 +40,8 @@ You will get a token like this, save it
 5. With the latest update I added 2 more commands to swap everything to WETH or USDC, so now you can write:
 ```
 generate_farm_paths - Generate swap paths for all wallets
-swap_to_weth Swap everything to WETH
-swap_to_usdc Swap everything to USDC
+swap_to_weth - Swap everything to WETH
+swap_to_usdc - Swap everything to USDC
 ```
 
 
