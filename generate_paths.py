@@ -31,7 +31,7 @@ def generate_farm_paths(message):
 
     # set sleep times
     total_time = 45 * 60
-    sleep_times = divide_length(total_time, len(users))
+    sleep_times = list(divide_length(total_time, len(users)))
 
     n = 0
     total_volume = 0
@@ -63,7 +63,7 @@ def generate_farm_paths(message):
             # build the message to send
 
             total_volume += suggested_tx['tx_value']
-            n += 1
+
 
     # gas estimation is a bit simplified, but gas fees are incredibly low on zksync so it's ok
     gas_estimate = round((w3.eth.gas_price * 2_000_000 / 1e18) * 0.7 * get_eth_price(), 3)
