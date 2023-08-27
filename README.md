@@ -37,6 +37,13 @@ You will get a token like this, save it
 
 3. /mybots -> select your bot -> edit bot -> edit commands
 4. digit this `generate_farm_paths - Generate swap paths for all wallets`
+5. With the latest update I added 2 more commands to swap everything to WETH or USDC, so now you can write:
+```
+generate_farm_paths - Generate swap paths for all wallets
+swap_to_weth Swap everything to WETH
+swap_to_usdc Swap everything to USDC
+```
+
 
 You're done with telegram, let's move to Python
 
