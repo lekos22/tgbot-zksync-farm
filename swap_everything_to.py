@@ -27,7 +27,7 @@ def swap_to_weth(message):
             txs[i] = {
                 "token_in": USDC_ADDRESS,
                 "token_out": WETH_ADDRESS,
-                "amount_in": users[i]['usdc_balance'],
+                "amount_in": users[i]['usdc_balance']/1e6,
                 "tx_value": users[i]['usdc_balance']/1e6,
                 "sleep_time": sleep_times[n]
             }
@@ -67,7 +67,7 @@ def swap_to_usdc(message):
             txs[i] = {
                 "token_in": WETH_ADDRESS,
                 "token_out": USDC_ADDRESS,
-                "amount_in": users[i]['weth_balance'],
+                "amount_in": users[i]['weth_balance']/1e18,
                 "tx_value": users[i]['weth_balance']/1e18,
                 "sleep_time": sleep_times[n]
             }
